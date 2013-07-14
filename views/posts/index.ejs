@@ -1,0 +1,27 @@
+<% if(typeof obj !== "undefined") { %>	
+	<% var o = obj["posts"] %>
+	<% if(o.length > 0) { %>
+		<div id="ctnr">
+			<% for(var i=0;i<o.length;i++){ %>
+				<div class="p">
+					<div class="p-n"><%- o[i].title %></div>
+					<div class="p-c">
+						<span class="p-date"><%= (o[i].updated_at)? o[i].updated_at : "n/a" %></span>
+						<div class="p-ctnt">
+							<%- o[i].content %>
+						</div>
+					</div>
+					<% if(req.session.user) { %>
+						<span class="more">
+							<a href="/posts/<%= o[i].id %>/edit" class='btn fl'>Edit</a>
+							<a href="/posts/<%= o[i].id %>/delete" class='btn fl'>Delete</a>
+						</span>
+					<% } %>
+					<div class="clr"></div>
+				</div>
+			<% } %>
+		</div>
+	<% }else{ %>
+		No results found.
+	<% } %>
+<% } %>

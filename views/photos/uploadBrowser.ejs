@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	  <title><% if(typeof title !== "undefined"){ %><%= title %><% }else{ %>B<% } %></title>
+	  <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600' rel='stylesheet' type='text/css'>
+	  <link rel="stylesheet" href="/css/style.css" type="text/css">
+	  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	  <script type="text/javascript">google.load("jquery", "1.7.1");</script>
+	  <style type="text/css">
+	  	.img{padding:0 100px 0 0;margin:0;position:relative;float:left;}
+	  	.urls{position:absolute;top:0;right:0;width:100px;height:240px;z-index:3;}
+	  	.urls > span{display:block;color:#333;background-color:rgba(0,0,0,0.3);cursor:pointer;}
+	  </style>
+	</head>
+	<body>
+		<% for(var i=0;i<obj.photos.length;i++){ %>
+			<div class="img">
+				<img src=<%- JSON.stringify(obj.photos[i].urls['small_240']) %> >
+				<div class="urls">
+					<% for(var j in obj.photos[i].urls){ %>
+						<span data-url=<%- JSON.stringify(obj.photos[i].urls[j]) %>><%= j %></span>
+					<% } %>
+				</div>
+			</div>
+		<% } %>
+		<script type="text/javascript">
+		$(function(){
+			function getUrlParam( paramName ) {
+			    var reParam = new RegExp( '(?:[\?&]|&)' + paramName + '=([^&]+)', 'i' ) ;
+			    var match = window.location.search.match(reParam) ;
+
+			    return ( match && match.length > 1 ) ? match[ 1 ] : null ;
+			}
+			var funcNum = getUrlParam( 'CKEditorFuncNum' );
+			$('.urls > span').click(function(){
+				window.opener.CKEDITOR.tools.callFunction( funcNum, $(this).attr('data-url'));
+				window.close();
+			});
+		})
+		</script>
+	</body>
+</html>

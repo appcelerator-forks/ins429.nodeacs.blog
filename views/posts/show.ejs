@@ -1,0 +1,13 @@
+<% var o = obj["posts"][0] %>
+<div id="ctnr" class="p10">
+  <div class="s-ctnr">
+    <% for(var info in o){ %>
+      <% if(typeof o[info] !== "object"){ %>
+      <div class="place"><span class="name fl"><%= info %></span><span class="val fl"><%= o[info] %></span></div>
+      <% }else{ %>
+      <div class="place"><span class="name fl"><%= info %></span><span class="val fl"><%= JSON.stringify(o[info]) %></span></div>
+      <% } %>
+      <div class="clr"></div>
+    <% } %>
+  </div>  
+</div>

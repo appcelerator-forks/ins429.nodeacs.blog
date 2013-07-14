@@ -1,0 +1,12 @@
+<div id="tp">
+  <div id="tp-title"><a href="/">Blog</a></div>
+    <div id="usr">
+    <% if(req.session.user) { %>
+      <a href="/profile" class="user l-n-btn"><%= (req.session.user.email) ? req.session.user.email : req.session.user.username %></a>
+      <a href="/logout" class="l-n-btn">Logout</a>
+    <% }else{ %>
+      <a href="/login" class="l-n-btn">sign in</a>
+    <% } %>
+  </div>
+  <div class="clr"></div>
+</div>

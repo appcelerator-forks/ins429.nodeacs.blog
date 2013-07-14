@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><% if(typeof title !== "undefined"){ %><%= title %><% }else{ %>B<% } %></title>
+  <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/style.css" type="text/css">
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script type="text/javascript">google.load("jquery", "1.7.1");</script>
+  <script src="js/angular.min.js"></script>
+  <script src="js/main.js"></script>
+  <script src="/js/advanced.js"></script>
+  <script src="/js/wysihtml5-0.4.0pre.min.js"></script>
+  <script type="text/javascript">
+    $(function(){
+      if($('#flash').length > 0){
+        setTimeout(function(){$('#flash').fadeOut()},3000);
+      }
+      $('#btn, #close-post-form').click(function(){
+        if ($('#post-form').hasClass('bounceInRight')) {
+          $('#post-form').removeClass('bounceInRight').addClass('bounceOutRight');
+        } else {
+          $('#post-form').removeClass('bounceOutRight').addClass('bounceInRight');
+        }
+      });
+
+      var editor = new wysihtml5.Editor("editor", {
+        toolbar: "wysihtml5-toolbar",
+        parserRules: wysihtml5ParserRules
+      });
+    });
+  </script>
+  <style type="text/css">
+    .post-summary {
+      color: #333;
+      background: #fcfcfc;
+      margin: 0;
+      padding: 3px;
+      border-bottom: 1px solid #ccc;
+      cursor: pointer;
+    }
+    .post-summary:hover {
+      background: #f0ffff;
+    }
+    .post-summary.active {
+      color: #fff;
+      background: #333;
+    }
+    #btn {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 100px;
+      height: 100px;
+    }
+    #post-form {
+      display: none;
+      position: fixed;
+      top: 0;
+      background: #eee;
+      width: 100%;
+      height: 100%;
+      margin: 0 0 0 21%;
+      z-index: 3;
+    }
+    #post-form.bounceOutRight, #post-form.bounceInRight {
+      display: block;
+    }
+  </style>
+</head>
+<body ng-app="acsBlog">
+  <div id="btn">BUTTON</div>
+  <section id="post-form" class="animated">
+    <div id="close-post-form">close</div>
+
+    <form name="create" action="create" method="post" enctype="multipart/form-data">
+      <div><label>title:</label><input type="text" name="title" /></div>
+
+      <div id="wysihtml5-toolbar" style="display: none;">
+        <a data-wysihtml5-command="bold">bold</a>
+        <a data-wysihtml5-command="italic">italic</a>
+
+        <!-- Some wysihtml5 commands require extra parameters -->
+        <a data-wysihtml5-command="foreColor" data-wysihtml5-command-value="red">red</a>
+        <a data-wysihtml5-command="foreColor" data-wysihtml5-command-value="green">green</a>
+        <a data-wysihtml5-command="foreColor" data-wysihtml5-command-value="blue">blue</a>
+
+        <!-- Some wysihtml5 commands like 'createLink' require extra paramaters specified by the user (eg. href) -->
+        <a data-wysihtml5-command="createLink">insert link</a>
+        <div data-wysihtml5-dialog="createLink" style="display: none;">
+          <label>
+            Link:
+            <input data-wysihtml5-dialog-field="href" value="http://" class="text">
+          </label>
+          <a data-wysihtml5-dialog-action="save">OK</a> <a data-wysihtml5-dialog-action="cancel">Cancel</a>
+        </div>
+      </div>
+      <div><label>content:</label><textarea type="text" name="content" cols="80" id="editor" name="content" rows="10"></textarea></div>
+      <div><label>tags:</label><input type="text" name="tags" placeholder="a,b,c" /></div>
+      <input class="fr" type="submit" value="Submit"><a href="/posts" class="cncl fr">Cancel</a>
+      <div class="clr"></div>
+    </form>
+  </section>
+  <section ng-controller="PostsCtrl">
+    <% if(req.session.flash && req.session.flash.msg){ %>
+      <div id="flash"><%= req.session.flash.msg %></div>
+    <% } %>
+    <div id="leftbar" infinite-scroll="loadMorePosts()" infinite-scroll-disabled="busy" infinite-scroll-distance="2">
+      <div class="post-summary" ng-repeat="post in posts" ng-click="postClicked(post);" ng-class="{active : isPostSelected(post)}">
+        <h3 class="side-post-title" ng-bind-html="post.title | truncate:50:true"></h3>
+        <p class="side-post-content" ng-bind-html="post.content | truncate:50:true"></p>
+      </div>
+    </div>
+    <div id="content" ng-model="thePost">
+      <h3 class="post-title" ng-bind-html="thePost.title || 'ACS Blog'"></h3>
+      <div class="post-content" ng-bind-html="thePost.content"></div>
+    </div>
+  </section>
+</body>
+</html>

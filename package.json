@@ -1,0 +1,26 @@
+{
+  "name": "simple-blog",
+  "version": "0.1.0",
+  "description": "",
+  "type": "acs",
+  "main": "app.js",
+  "logfile" : "simple-blog.log",
+  "keywords": [
+  ],
+  "author": "",
+  "maintainers": [
+  ],
+  "contributors": [
+  ],
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "preferGlobal": false,
+  "dependencies": {
+    "express-partials" : "*"
+  },
+  "license":"",
+  "private": true,
+  "framework": "mvc"
+}

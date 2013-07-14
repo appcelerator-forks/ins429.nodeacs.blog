@@ -1,0 +1,41 @@
+<script src="/js/advanced.js"></script>
+<script src="/js/wysihtml5-0.4.0pre.min.js"></script>
+<script type="text/javascript">
+$(function(){
+  var editor = new wysihtml5.Editor("editor", {
+    toolbar: "wysihtml5-toolbar",
+    parserRules: wysihtml5ParserRules
+  });
+});
+</script>
+<div id="ctnr" class="p10">
+  <div class="form-ctnr">
+    <form name="create" action="create" method="post" enctype="multipart/form-data">
+      <div><label>title:</label><input type="text" name="title" /></div>
+      
+      <div id="wysihtml5-toolbar" style="display: none;">
+        <a data-wysihtml5-command="bold">bold</a>
+        <a data-wysihtml5-command="italic">italic</a>
+        
+        <!-- Some wysihtml5 commands require extra parameters -->
+        <a data-wysihtml5-command="foreColor" data-wysihtml5-command-value="red">red</a>
+        <a data-wysihtml5-command="foreColor" data-wysihtml5-command-value="green">green</a>
+        <a data-wysihtml5-command="foreColor" data-wysihtml5-command-value="blue">blue</a>
+        
+        <!-- Some wysihtml5 commands like 'createLink' require extra paramaters specified by the user (eg. href) -->
+        <a data-wysihtml5-command="createLink">insert link</a>
+        <div data-wysihtml5-dialog="createLink" style="display: none;">
+          <label>
+            Link:
+            <input data-wysihtml5-dialog-field="href" value="http://" class="text">
+          </label>
+          <a data-wysihtml5-dialog-action="save">OK</a> <a data-wysihtml5-dialog-action="cancel">Cancel</a>
+        </div>
+      </div>
+      <div><label>content:</label><textarea type="text" name="content" cols="80" id="editor" name="content" rows="10"></textarea></div>
+      <div><label>tags:</label><input type="text" name="tags" placeholder="a,b,c" /></div>
+      <input class="fr" type="submit" value="Submit"><a href="/posts" class="cncl fr">Cancel</a>
+      <div class="clr"></div>
+    </form>
+  </div>
+</div>
