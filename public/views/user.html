@@ -1,0 +1,68 @@
+<script type="text/javascript">
+  $(function(){
+    $('#loginTabBtn').click(function(e) {
+      $('#signupTab, #signupTabBtn').removeClass('active');
+      $('#loginTab, #loginTabBtn').addClass('active');
+    });
+    $('#signupTabBtn').click(function(e) {
+      $('#loginTab, #loginTabBtn').removeClass('active');
+      $('#signupTab, #signupTabBtn').addClass('active');
+    });
+  });
+</script>
+<section id="user-form" class="animated" ng-controller="UsersCtrl">
+  <div class="close-form"><i class="icon-remove icon-2x"></i></div>
+
+  <div ng-hide="user" class="user-login-signup-btns">
+    <span class="tron-cyan-button active" id="loginTabBtn">Login</span>
+    <span class="tron-cyan-button" id="signupTabBtn">Sign Up</span>
+  </div>
+
+  <div ng-show="user" ng-model="user" class="p10">
+    <p>{{user}}</p>
+    <span class="tron-cyan-button" ng-click="logout()">logout</span>
+  </div>
+
+  <div ng-hide="user" class="tab-content">
+    <div class="tab-pane active" id="loginTab">
+      <form name="form" ng-submit="login()" method="post">
+        <fieldset>
+          <div class="form-group">
+            <input type="text" name="username" placeholder="user name" title="username" ng-model="loginData.login" class="form-control" />
+          </div>
+          <div class="form-group">
+            <input type="password" name="password" placeholder="password" title="password" ng-model="loginData.password" class="form-control" />
+          </div>
+          <div class="form-group">
+            <input type="submit" class="tron-cyan-button" value="login"class="form-control" />
+          </div>
+        </fieldset>
+      </form>
+    </div>
+    <div class="tab-pane" id="signupTab">
+      <div id="userSignUp">
+        <form ng-submit="signup()" method="post">
+          <fieldset>
+            <div class="form-group">
+              <input type="text" name="first_name" placeholder="first name" title="first name" ng-model="signupData.first_name" class="form-control" />
+            </div>
+            <div class="form-group">
+              <input type="text" name="last_name" placeholder="last name" title="last name" ng-model="signupData.last_name" class="form-control" />
+            </div>
+            <div class="form-group">
+              <input type="text" name="username" placeholder="username" title="username" ng-model="signupData.username" class="form-control" />
+            </div>
+            <div class="form-group">
+              <input type="password" name="password" placeholder="password" title="password" ng-model="signupData.password" class="form-control" />
+            </div>
+            <div class="form-group">
+              <input type="password" name="password_confirmation" placeholder="password_confirmation" title="password_confirmation" ng-model="signupData.password_confirmation" class="form-control" />
+            </div>
+            <div class="form-group">
+              <input type="submit" class="tron-cyan-button" value="signup"class="form-control" />
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+</section>

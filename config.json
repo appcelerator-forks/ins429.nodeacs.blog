@@ -1,31 +1,30 @@
 {
-  "routes":
-  [
+  "routes": [
     { "path": "/", "callback": "posts#_index" },
     { "path": "/login", "method": "get", "callback": "application#login" },
-    { "path": "/login", "method": "post", "callback": "session#login" },
-    { "path": "/logout", "method": "get", "callback": "session#logout" },
-    { "path": "/signup", "method": "get", "callback": "application#signup" },
+    { "path": "/login", "method": "post", "callback": "user#login" },
+    { "path": "/logout", "method": "get", "callback": "user#logout" },
     { "path": "/signup", "method": "post", "callback": "user#signup" },
-    { "path": "/chatroom", "method": "get", "callback": "application#chatroom" },
+    { "path": "/showme", "method": "get", "callback": "user#showMe" },
 
     { "path": "/posts/new", "method": "get", "callback": "posts#_new" },
     { "path": "/posts/show.json/:id", "method": "get", "callback": "posts#show" },
+    { "path": "/posts/show", "method": "get", "callback": "posts#show" },
     { "path": "/posts/create", "method": "post", "callback": "posts#_create" },
+    { "path": "/posts/update", "method": "put", "callback": "posts#_update" },
+    { "path": "/posts/delete", "method": "delete", "callback": "posts#_delete" },
 
     { "path": "/posts/query", "method": "get", "callback": "posts#_query" },
 
     { "path": "/photos/create", "method": "post", "callback": "photos#_create" },
-    { "path": "/photos/uploadBrowser", "method": "get", "callback": "photos#uploadBrowser" },
+    { "path": "/photos/query", "method": "get", "callback": "photos#_query" },
 
     { "path": "/reviews/query", "method": "get", "callback": "reviews#_query" }
   ],
-  "filters":
-  [
-  	 { "path": "/chatroom", "callback": "session_filter#checkSession" }
+  "filters": [
+    { "path": "/chatroom", "callback": "session_filter#checkSession" }
   ],
-  "websockets":
-  [
+  "websockets": [
   	{ "event": "msg", "callback": "chatroom#receiveMessage"}
   ]
 }

@@ -1,12 +1,9 @@
 var ACS = require('acs').ACS,
-		logger = require('acs').logger,
 		express = require('express'),
 		partials = require('express-partials');
 
-// initialize app (setup ACS library and logger)
 function start(app) {
 	ACS.init('4OiT0CIKFeO90Ug782MZ5L3iUJ8FFTKC', 'dY63vo0ZsGRgdyfaTP7W8wJjhbAiLlnf');
-	logger.setLevel('DEBUG');
 
 	//use connect.session
 	app.use(express.cookieParser());

@@ -1,18 +1,66 @@
+'use strict';
 var app = angular.module('acsBlog', ['ngSanitize', 'filters', 'infinite-scroll']);
 
-app.controller('PostsCtrl', function PostsCtrl($scope, $timeout, dataService) {
+app.controller('UsersCtrl', function UsersCtrl($scope, $timeout, acsService, clearForms, dataset) {
+  $scope.user = null;
+  $scope.checkLoginStatus = function() {
+    acsService.showMe().then(function(data) {
+      $scope.user = dataset.user = data;
+    });
+  };
+
+  $scope.login = function() {
+    acsService.login(this.loginData).then(function(data) {
+      if (data.meta && data.meta.code === 200) {
+        $scope.user = dataset.user = data.users[0];
+        clearForms.clearUserForm($scope);
+      } else {
+        // flash!
+        console.log('wrong');
+      }
+    });
+  };
+
+  $scope.logout = function() {
+    acsService.logout().then(function(data) {
+      if (data.meta && data.meta.code === 200) {
+        $scope.user = dataset.user = null;
+      } else {
+        // flash!
+        console.log('wrong');
+      }
+    });
+  };
+
+  $scope.signup = function() {
+    acsService.signup(this.signupData).then(function(data) {
+      if (data.meta && data.meta.code === 200) {
+        $scope.user = data.users[0];
+        clearForms.clearUserForm($scope);
+      } else {
+        // flash!
+        console.log('wrong');
+      }
+    });
+  };
+
+  $scope.checkLoginStatus();
+});
+
+app.controller('PostsCtrl', function PostsCtrl($scope, $timeout, acsService, clearForms, dataset, $compile) {
   $scope.page = 1;
   $scope.posts = [];
+  $scope.loaderImages = [];
   $scope.postsLoading = false;
   $scope.allDisplayed = false;
-  $scope.update = function(params) {
+  $scope.query = function(params) {
     // if all pages are displayed, return.
     if ($scope.allDisplayed) {
       return;
     }
 
     $scope.postsLoading = true;
-    dataService.queryPosts(params).then(function(data) {
+    acsService.queryPosts(params).then(function(data) {
       $scope.posts = $scope.posts.concat(data.posts);
 
       // if page hits total_page, shouldn't be displaying anymore
@@ -24,9 +72,82 @@ app.controller('PostsCtrl', function PostsCtrl($scope, $timeout, dataService) {
     });
   };
 
+  $scope.deletePost = function(post) {
+    $scope.postForm = {
+      id: post.id
+    }
+    acsService.deletePost($scope.postForm).then(function(data) {
+      if (data.meta && data.meta.code === 200) {
+        angular.forEach($scope.posts, function(value, key) {
+          if(value.id === $scope.postForm.id) {
+            $scope.posts.splice(key, 1);
+            delete $scope.thePost;
+          }
+        });
+      }  else {
+        console.log(data);
+      }
+    });
+  };
+
+  $scope.editPost = function(post) {
+    $scope.postForm = {
+      method: 'put',
+      id: post.id,
+      title: post.title,
+      tags: post.tags,
+      content: $scope.postContent.composer.setValue(post.content)
+    }
+    $('#post-form').removeClass('bounceOutRight').addClass('bounceInRight');
+  };
+
+  $scope.submitPost = function() {
+    // wygihtml5 manipulates textarea to iframe which doesn't seems to work, jquery hack
+    $scope.postForm.content = $scope.postContent.composer.getValue();
+    if($scope.postForm && $scope.postForm.method === 'put') {
+      acsService.updatePost($scope.postForm).then(function(data) {
+        if (data.meta && data.meta.code === 200) {
+          angular.forEach($scope.posts, function(value, key) {
+            if(value.id === data.posts[0].id) {
+              $scope.posts[key] = $scope.thePost = data.posts[0];
+            }
+          });
+          data.posts[0];
+          clearForms.clearPostForm($scope);
+          $('#post-form').removeClass('bounceInRight').addClass('bounceOutRight');
+        } else {
+          $scope.flash = data.message;
+        }
+      });
+    } else {
+      acsService.createPost($scope.postForm).then(function(data) {
+        if (data.meta && data.meta.code === 200) {
+          $scope.posts.unshift(data.posts[0]);
+          clearForms.clearPostForm($scope);
+          $('#post-form').removeClass('bounceInRight').addClass('bounceOutRight');
+        } else {
+          $scope.flash = data.message;
+        }
+      });
+    }
+  };
+
+  $scope.closePostForm = function() {
+    clearForms.clearPostForm($scope);
+    $('#post-form').removeClass('bounceInRight').addClass('bounceOutRight');
+  }
+
   // sets post as thePost
   $scope.postClicked = function(post) {
+    $scope.isOwner = (dataset.user.id === post.user.id) ? true : false;
     $scope.thePost = post;
+
+    // bounce in forms.
+    if ($('#user-form').hasClass('bounceInRight')) {
+      $('#user-form').removeClass('bounceInRight').addClass('bounceOutRight');
+    }else if ($('#post-form').hasClass('bounceInRight')) {
+      $('#post-form').removeClass('bounceInRight').addClass('bounceOutRight');
+    }
   };
 
   // sets thePost as active
@@ -38,14 +159,52 @@ app.controller('PostsCtrl', function PostsCtrl($scope, $timeout, dataService) {
   $scope.loadMorePosts = function() {
     if ($scope.postsLoading) return;
     $scope.page++;
-    $scope.update({page: $scope.page});
+    $scope.query({page: $scope.page});
   };
 
-  $scope.update({page: $scope.page});
+  $scope.imageLoader = function() {;
+    if (!$scope.loaderImages || $scope.loaderImages.length < 1) {
+      acsService.queryPhotos({per_page: 30}).then(function(data) {
+        $scope.loaderImages = $scope.loaderImages.concat(data.photos);
+      });
+      $('#imageLoader .modal-body').append('<div ng-repeat="photo in loaderImages" class="col-lg-3""><a href="#" class="thumbnail dropdown-toggle" data-toggle="dropdown"><img class="imageLoaderImage" src="{{photo.urls.thumb_100}}" width="100" height="100px" /></a><ul class="dropdown-menu"><li ng-repeat="url in photo.urls"><a href="#" ng-click="imageLoaderInsert(url)">{{url}}</a></li></ul></div>');
+      $compile($('#imageLoader').contents())($scope);
+    }
+    $('#imageLoader').modal('show');
+  }
+
+  $scope.imageLoaderInsert = function(url) {
+    $('#wysihtml5ImageLink').val(url);
+    $('#imageLoader').modal('hide');
+  }
+
+  $scope.query({page: $scope.page});
 
 });
 
-app.service('dataService', function($http, $templateCache) {
+app.service('dataset', function($http) {
+  return {
+    user: null
+  }
+});
+
+app.service('clearForms', function() {
+  return {
+    clearPostForm: function(scope) {
+      scope.postForm = null;
+      scope.postContent.composer.setValue('');
+      // scope.form.$setPristine(); ???
+    },
+
+    clearUserForm: function(scope) {
+      scope.loginData = null;
+      scope.signupData = null;
+      // scope.form.$setPristine(); ???
+    }
+  }
+});
+
+app.service('acsService', function($http, $templateCache) {
   return {
     queryPosts: function(params) {
       var posts = $http({method: 'GET', params: params, url: '/posts/query', cache: $templateCache}).then(function(resp){
@@ -55,9 +214,33 @@ app.service('dataService', function($http, $templateCache) {
       return posts;
     },
 
-    getPost: function() {
-      var post = $http({method: 'GET', url: '/posts/show', cache: $templateCache}).then(function(resp){
+    getPost: function(_id) {
+      var post = $http({method: 'GET', params: {id: _id}, url: '/posts/show', cache: $templateCache}).then(function(resp){
         return resp.data.posts[0];
+      });
+
+      return post;
+    },
+
+    createPost: function(params) {
+      var post = $http({method: 'POST', data: params, url: '/posts/create', cache: $templateCache}).then(function(resp){
+        return resp.data;
+      });
+
+      return post;
+    },
+
+    updatePost: function(params) {
+      var post = $http({method: 'PUT', data: params, url: '/posts/update', cache: $templateCache}).then(function(resp){
+        return resp.data;
+      });
+
+      return post;
+    },
+
+    deletePost: function(params) {
+      var post = $http({method: 'DELETE', params: params, url: '/posts/delete', cache: $templateCache}).then(function(resp){
+        return resp.data;
       });
 
       return post;
@@ -65,26 +248,70 @@ app.service('dataService', function($http, $templateCache) {
 
     getReviews: function(data) {
       var review = $http({method: 'GET', url: '/reviews/query', cache: $templateCache}).then(function(resp){
-        return resp.data.posts[0];
+        return resp.data.reviews[0];
       });
 
       return review;
+    },
+
+    queryPhotos: function(params) {
+      var photos = $http({method: 'GET', params: params, url: '/photos/query', cache: $templateCache}).then(function(resp){
+        return resp.data;
+      });
+
+      return photos;
+    },
+
+    login: function(data) {
+      var userSession = $http({method: 'POST', url: '/login', data: data, cache: $templateCache}).then(function(resp){
+        return resp.data;
+      });
+
+      return userSession;
+    },
+
+    logout: function(data) {
+      var userSession = $http({method: 'GET', url: '/logout', cache: $templateCache}).then(function(resp){
+        return resp.data;
+      });
+
+      return userSession;
+    },
+
+    signup: function(data) {
+      var userSession = $http({method: 'POST', url: '/signup', data: data, cache: $templateCache}).then(function(resp){
+        return resp.data;
+      });
+
+      return userSession;
+    },
+
+    showMe: function() {
+      var user = $http({method: 'GET', url: '/showme', cache: $templateCache}).then(function(resp){
+        if (resp.data.meta && resp.data.meta.code === 200) {
+          return resp.data.users[0];
+        } else {
+          return null;
+        }
+      });
+
+      return user;
     }
 
   };
 });
 
 // string truncate module, by https://gist.github.com/danielcsgomes/2478654
-angular.module('filters', []).filter('truncate', function () {
-  return function (text, length, removeHtmlTags, end) {
-    var str = (removeHtmlTags) ? text.replace(/(<([^>]+)>)/ig,"") : text;
+angular.module('filters', []).filter('truncate', function() {
+  return function(text, length, removeHtmlTags, end) {
+    var str = (removeHtmlTags) ? text.replace(/(<([^>]+)>)/ig,'') : text;
 
     if (isNaN(length)) {
       length = 10;
     }
 
     if (end === undefined) {
-      end = "...";
+      end = '...';
     }
 
     if (str.length <= length || str.length - end.length <= length) {
@@ -95,6 +322,89 @@ angular.module('filters', []).filter('truncate', function () {
   };
 });
 
+app.directive('navHeader', function(dataset, $compile) {
+  return {
+    restrict: 'E',
+    transclude: true,
+    template: '<div id="nav-header">' +
+                '<span id="nav-title">acs.posts</span>' +
+                '<div id="nav-buttons">' +
+                  '<i id="login" class="icon-user" ng-click="openUserModal()"></i>' +
+                  '<i id="new" class="icon-pencil" ng-click="openPostModal()"></i>' +
+                '</div>' +
+                '<div class="clr"></div>' +
+              '</div>',
+    controller: function($scope) {
+      $scope.openUserModal = function() {
+        if ($('#user-form').hasClass('bounceInRight')) {
+          $('#user-form').removeClass('bounceInRight').addClass('bounceOutRight');
+        } else {
+          if ($('#post-form').hasClass('bounceInRight')) {
+            $('#post-form').removeClass('bounceInRight').addClass('bounceOutRight');
+          }
+          $('#user-form').removeClass('bounceOutRight').addClass('bounceInRight');
+        }
+      };
+      $scope.openPostModal = function() {
+        if (dataset.user) {
+          if ($('#post-form').hasClass('bounceInRight')) {
+            $('#post-form').removeClass('bounceInRight').addClass('bounceOutRight');
+          } else {
+            if ($('#user-form').hasClass('bounceInRight')) {
+              $('#user-form').removeClass('bounceInRight').addClass('bounceOutRight');
+            }
+            $('#post-form').removeClass('bounceOutRight').addClass('bounceInRight');
+          }
+        } else {
+          if ($('#user-form').hasClass('bounceInRight')) {
+            $('#user-form').removeClass('bounceInRight').addClass('bounceOutRight');
+          } else {
+            if ($('#post-form').hasClass('bounceInRight')) {
+              $('#post-form').removeClass('bounceInRight').addClass('bounceOutRight');
+            }
+            $('#user-form').removeClass('bounceOutRight').addClass('bounceInRight');
+          }
+        }
+      }
+    },
+    link: function(scope, element) {
+    }
+  }
+});
+
+app.directive('user', function() {
+  return {
+    restrict: 'E',
+    transclude: true,
+    templateUrl: 'views/user.html',
+    link: function(scope) {
+    }
+  }
+});
+
+app.directive('postForm', function() {
+  return {
+    restrict: 'E',
+    transclude: true,
+    templateUrl: 'views/post-form.html',
+    link: function(scope, element) {
+    }
+  }
+});
+
+app.directive('wysiwyg', function() {
+  return {
+    restrict: 'E',
+    transclude: true,
+    template: '<textarea name="content" cols="80" id="postForm-content-editor" ng-model="postForm.content" class="form-control"></textarea>',
+    link: function(scope, element) {
+      scope.postContent = new wysihtml5.Editor(element.find('textarea').attr('id'), {
+        toolbar: 'wysihtml5-toolbar',
+        parserRules: wysihtml5ParserRules
+      });
+    }
+  }
+});
 
 //  modules
 /* ng-infinite-scroll - v1.0.0 - 2013-02-23 */
